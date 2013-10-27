@@ -1,0 +1,28 @@
+{
+  "name": "tilt",
+  "version": "0.0.0",
+  "description": "Tilt controller for an ar.drone.",
+  "main": "index.js",
+  "dependencies": {
+    "socket.io": "~0.9.16",
+    "ar-drone": "~0.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:R42/tilt.git"
+  },
+  "keywords": [
+    "tilt",
+    "ardrone",
+    "nodecopter"
+  ],
+  "author": "soarez, bmccoelho, luismreis",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/R42/tilt/issues"
+  }
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Accelerometer Javascript Test</title>
+<meta name="viewport" content="width=device-width,user-scalable=yes" />
+<style>
+body {
+  font-family: helvetica, arial, sans serif;
+}
+#sphere {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  -webkit-radius: 50px;
+  background-color: blue;
+}
+</style>
+</head>
+
+<body>
+<div id="content">
+    <h1>Accelerometer Javascript Test</h1>
+    <div id="sphere"></div>
+<ul>
+  <li>go ?: <span id="go"></span></li>
+  <li>rotation alpha: <span id="rotationAlpha"></span> degree</li>
+  <li>rotation beta: <span id="rotationBeta"></span> degree</li>
+  <li>rotation gamma: <span id="rotationGamma"></span> degree</li>
+  <li>cmd0: <span id="cmd00"></span>|<span id="cmd01"></span></li>
+  <li>cmd1: <span id="cmd10"></span>|<span id="cmd11"></span></li>
+  <li>cmd2: <span id="cmd20"></span>|<span id="cmd21"></span></li>
+</ul>
+
+test: <span id="test"></span>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+
+function go() {
+  document.getElementById('cmd00').innerHTML = '00';
+
+  var angles = new Array(3 * 16 * 1024);
+  var sampleCount = 0;
+
+  var threshold = 0.5;
+
+  document.getElementById('cmd01').innerHTML = '01';
+
+  if (window.DeviceMotionEvent != undefined) {
+    window.ondevicemotion = function(e) {
+      document.getElementById('cmd10').innerHTML = '10';
+      if ( e.rotationRate ) {
+        document.getElementById('cmd11').innerHTML = sampleCount;
+        angles[sampleCount * 3 + 0] = e.rotationRate.alpha;
+        angles[sampleCount * 3 + 1] = e.rotationRate.beta;
+        angles[sampleCount * 3 + 2] = e.rotationRate.gamma;
+        sampleCount += 1;
+      }
+    }
+
+    setInterval( function() {
+      document.getElementById('cmd20').innerHTML = sampleCount;
+      var alpha  = 0, beta = 0, gamma = 0;
+      for (var i = 0; i < sampleCount; i++) {
+        alpha += angles[i * 3 + 0];
+        beta  += angles[i * 3 + 1];
+        gamma += angles[i * 3 + 2];
+      }
+      if (sampleCount > 0) {
+        alpha = alpha / sampleCount;
+        beta  = beta  / sampleCount;
+        gamma = gamma / sampleCount;
+        sampleCount = 0;
+      }
+
+      document.getElementById('cmd21').innerHTML = '21';
+
+      document.getElementById('rotationAlpha').innerHTML = alpha;
+      document.getElementById('rotationBeta' ).innerHTML = beta;
+      document.getElementById('rotationGamma').innerHTML = gamma;
+
+      commands = [];
+
+      if (alpha < -threshold) { commands.push(['clockwise', -alpha]); } else
+      if (alpha > threshold) { commands.push(['counterClockwise', alpha]); }
+      if (beta  < -threshold) { commands.push(['left'     , -beta ]); } else
+      if (beta  > threshold) { commands.push(['right'           , beta ]); }
+      if (gamma < -threshold) { commands.push(['front'    , -gamma]); } else
+      if (gamma > threshold) { commands.push(['back'            , gamma]); }
+
+      for(var i=0; i<commands.length; i++) {
+        if (commands[i][1] > 1) { commands[i][1] = 1; }
+        for(var j=0; j<commands[i].length; j++) {
+          document.getElementById('cmd' + i + '' + j).innerHTML = commands[i][j];
+        }
+      }
+
+      socket.emit('msg', { cmds: commands });
+    }, 500);
+  }
+}
+
+var socket = io.connect('http://alnitak.local:8000');
+socket.on('connect', function () {
+  go();
+});
+
+
+</script>
+
+</body>
+</html>
